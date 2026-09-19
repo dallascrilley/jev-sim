@@ -1,0 +1,139 @@
+{
+  "ok": true,
+  "data": {
+    "platform": "ios",
+    "outline": "App: Settings  402x874\n\n[Top  y<120]\n  @1  StaticText  \"Settings\"\n[Content  y=120..754]\n  @5  SearchField  \"Search\"\n  @7  Button  \"Sign in to your iPhone\"\n  @9  Button  \"General\"  #general\n  @10 Button  \"Display & Brightness\"\n  @11 Button  \"Wallpaper\"\n[Bottom  y>754]\n  @43 TabBar\n",
+    "entries": [
+      {
+        "aliases": {
+          "at": 1
+        },
+        "role": "StaticText",
+        "label": "Settings",
+        "frame": {
+          "x": 16,
+          "y": 60,
+          "width": 200,
+          "height": 28
+        },
+        "region": {
+          "kind": "Top"
+        },
+        "states": []
+      },
+      {
+        "aliases": {
+          "at": 5
+        },
+        "role": "SearchField",
+        "label": "Search",
+        "frame": {
+          "x": 16,
+          "y": 100,
+          "width": 370,
+          "height": 36
+        },
+        "region": {
+          "kind": "Content"
+        },
+        "states": []
+      },
+      {
+        "aliases": {
+          "at": 7
+        },
+        "role": "Button",
+        "label": "Sign in to your iPhone",
+        "frame": {
+          "x": 0,
+          "y": 160,
+          "width": 402,
+          "height": 56
+        },
+        "region": {
+          "kind": "Content"
+        },
+        "states": []
+      },
+      {
+        "aliases": {
+          "at": 9
+        },
+        "role": "Button",
+        "label": "General",
+        "frame": {
+          "x": 0,
+          "y": 240,
+          "width": 402,
+          "height": 44
+        },
+        "region": {
+          "kind": "Content"
+        },
+        "states": [],
+        "uniqueId": "general"
+      },
+      {
+        "aliases": {
+          "at": 10
+        },
+        "role": "Button",
+        "label": "Display & Brightness",
+        "frame": {
+          "x": 0,
+          "y": 284,
+          "width": 402,
+          "height": 44
+        },
+        "region": {
+          "kind": "Content"
+        },
+        "states": []
+      },
+      {
+        "aliases": {
+          "at": 11
+        },
+        "role": "Button",
+        "label": "Wallpaper",
+        "frame": {
+          "x": 0,
+          "y": 328,
+          "width": 402,
+          "height": 44
+        },
+        "region": {
+          "kind": "Content"
+        },
+        "states": []
+      },
+      {
+        "aliases": {
+          "at": 43
+        },
+        "role": "TabBar",
+        "label": "",
+        "frame": {
+          "x": 0,
+          "y": 820,
+          "width": 402,
+          "height": 54
+        },
+        "region": {
+          "kind": "Bottom",
+          "label": "TabBar"
+        },
+        "states": []
+      }
+    ],
+    "lists": [],
+    "screen": {
+      "x": 0,
+      "y": 0,
+      "width": 402,
+      "height": 874
+    },
+    "appLabel": "Settings",
+    "appPackage": "com.apple.Preferences"
+  }
+}
