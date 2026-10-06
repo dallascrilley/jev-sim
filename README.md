@@ -24,7 +24,7 @@ Traditional computer-use asks a large LLM to *generate* the next click. That is 
 
 1. **sim-use** returns a compact accessibility outline + `@N` aliases.
 2. **jev-sim** deterministically turns entries into candidates `{id, kind, selector, label}`.
-3. **Jev** (`jev-latest`) answers a typed **Choice** over those IDs (+ `done` / `scroll-up` / `scroll-down` / `wait`).
+3. **Jev** (`jev-1.13.0` by default) answers a typed **Choice** over those IDs (+ `done` / `scroll-up` / `scroll-down` / `wait`).
 4. **sim-use** executes `tap @N` or a gesture; we re-observe and log latency + confidence.
 
 ## Install
@@ -64,7 +64,17 @@ jev-sim dry-run "Open General" --ui-file tests/fixtures/ui_settings.json
 jev-sim step "Open General settings" --device "$UDID"
 jev-sim loop "Enable Dark Mode" --device "$UDID" --max-steps 15
 jev-sim step "…" --dry-run  # decide only
+jev-sim loop "Enable Dark Mode" --backend rizzo --max-steps 30 --trace ./decisions.jsonl
+jev-sim dry-run "Open General" --backend tev1 --ui-file tests/fixtures/ui_settings.json --trace ./decisions.jsonl
 ```
+
+`--backend` accepts `jev` (hosted model `jev-1.13.0`), `rizzo` (the pinned native endpoint), or `tev1` (the digest-pinned Ollama System One endpoint). A selected backend failure stops the command. The CLI does not start local model services. Local choices with one candidate select that candidate in code and skip the provider call.
+
+`--trace PATH` appends one JSON object per attempted step. Each record includes the backend and model, candidate and selected IDs, probabilities, timings, outcome, and error details. The trace excludes credentials and raw UI data.
+
+`loop` accepts `--max-steps 30` (also `--max-steps=30`) and takes the shared device lock. The backend, trace, candidate, probability, and lock contracts are described in [Backend, trace, and shared-lock guide](docs/backend-trace-locks.md).
+
+The agent only chooses from generated tap, scroll, wait, and done candidates. It does not generate text or type into fields. Local providers accept up to 26 choices per call; jev-sim handles larger sets with an ordered hierarchy and marks the resulting probabilities as derived and uncalibrated. Candidate-generation limits and consequences are documented in the guide.
 
 ## Live on a Mac (later)
 
@@ -90,7 +100,7 @@ choice=@9 conf=0.910 observe=320ms decide=45ms exec=80ms total=450ms [exec]
 |---|---|---|
 | Observe / act | Cua Driver (macOS / Windows / Linux desktop) | **sim-use** (iOS Simulator + Android) |
 | Candidates | Deterministic from AX / DOM / perception | Deterministic from `sim-use ui --json` `entries` |
-| Decision | TypeSafe **Jev** Choice over IDs | Same — `POST /v1/systemone` model `jev-latest` |
+| Decision | TypeSafe **Jev** Choice over IDs | Same — `POST /v1/systemone` model `jev-1.13.0` |
 | Meta actions | done / scroll / wait (etc.) | `done`, `scroll-up`, `scroll-down`, `wait` |
 
 jev-sim does **not** vendor or clone sim-use source; it shells out to the CLI only.

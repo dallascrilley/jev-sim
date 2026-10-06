@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
+import json
 from typing import Any, Iterable, Mapping, Sequence
 
 # Roles that are usually not worth tapping (read-only chrome).
@@ -163,9 +164,7 @@ def build_candidates(
     if include_meta:
         for mid, kind, label in META_ACTIONS:
             if mid not in seen:
-                candidates.append(
-                    ActionCandidate(id=mid, kind=kind, selector=mid, label=label)
-                )
+                candidates.append(ActionCandidate(id=mid, kind=kind, selector=mid, label=label))
                 seen.add(mid)
 
     return candidates
@@ -174,3 +173,33 @@ def build_candidates(
 def choice_criteria(candidates: Iterable[ActionCandidate]) -> dict[str, str]:
     """Map candidate id → short description for a TypeSafe Choice question."""
     return {c.id: c.criteria_blurb() for c in candidates}
+
+
+def semantic_target_id(ui: Mapping[str, Any], candidate_id: str) -> str | None:
+    """Return a stable identity for the element behind a sim-use alias."""
+    if not candidate_id.startswith("@"):
+        return None
+    data = _unwrap_ui(ui)
+    for entry in entries_from_ui(ui):
+        if f"@{_entry_alias(entry)}" != candidate_id or not _is_tappable(entry):
+            continue
+        unique = entry.get("uniqueId") or entry.get("resource_id")
+        if unique:
+            identity: tuple[Any, ...] = (
+                "id",
+                str(data.get("appPackage") or data.get("app_package") or ""),
+                str(unique),
+            )
+        else:
+            region = entry.get("region")
+            region_kind = region.get("kind") if isinstance(region, Mapping) else ""
+            identity = (
+                "semantic",
+                str(data.get("appPackage") or data.get("app_package") or ""),
+                str(data.get("appLabel") or data.get("app_label") or ""),
+                str(entry.get("role") or ""),
+                " ".join(str(entry.get("label") or "").split()),
+                str(region_kind or ""),
+            )
+        return json.dumps(identity, ensure_ascii=False, separators=(",", ":"))
+    return None

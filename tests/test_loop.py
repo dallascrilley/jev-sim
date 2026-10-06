@@ -5,6 +5,7 @@ from typing import Sequence
 
 import httpx
 import respx
+import pytest
 
 from jev_sim.loop import run_step
 from jev_sim.sim_use import CmdResult, SimUseClient
@@ -60,6 +61,7 @@ def test_run_step_executes_tap(ui_settings, mock_choice_response):
     assert "@9" in tap_calls[0]
     assert "--device" in tap_calls[0]
     assert "TEST-UDID" in tap_calls[0]
+    assert len([c for c in runner.calls if "ui" in c]) == 2  # type: ignore[attr-defined]
 
 
 @respx.mock
@@ -74,3 +76,41 @@ def test_run_step_observes_via_sim_use(ui_settings, mock_choice_response):
     assert "--json" in ui_calls[0]
     assert "--no-raw" in ui_calls[0]
     assert result.observe_ms >= 0
+
+
+@respx.mock
+def test_run_step_rejects_stale_alias_before_execute(ui_settings, mock_choice_response):
+    respx.post(DEFAULT_URL).mock(return_value=httpx.Response(200, json=mock_choice_response))
+    changed = json.loads(json.dumps(ui_settings))
+    changed["data"]["entries"][3]["uniqueId"] = "another-target"
+    observations = iter((ui_settings, changed))
+    calls = []
+
+    def runner(argv: Sequence[str], timeout: float | None) -> CmdResult:
+        calls.append(tuple(argv))
+        return CmdResult(tuple(argv), 0, json.dumps(next(observations)), "")
+
+    with pytest.raises(RuntimeError, match="semantic target changed"):
+        run_step(
+            "Open General",
+            sim=SimUseClient(runner=runner),
+            jev=TypeSafeClient(api_key="test-key"),
+        )
+    assert not any("tap" in call or "gesture" in call for call in calls)
+
+
+@respx.mock
+def test_trace_callback_records_failure(ui_settings):
+    respx.post(DEFAULT_URL).mock(return_value=httpx.Response(200, json={"answers": {}}))
+    records = []
+    with pytest.raises(Exception):
+        run_step(
+            "Open General",
+            ui=ui_settings,
+            jev=TypeSafeClient(api_key="test-key"),
+            dry_run=True,
+            trace_callback=records.append,
+        )
+    assert records[0]["outcome"] == "error"
+    assert records[0]["timings_ms"]["total"] >= 0
+    assert records[0]["error"]["type"]
