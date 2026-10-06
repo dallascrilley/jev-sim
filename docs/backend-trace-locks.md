@@ -1,7 +1,7 @@
 # Backend, trace, and shared-lock guide
 
-Date: 2026-10-06  
-Status: Current implementation  
+Date: 2026-10-06
+Status: Current implementation
 Related: jev-sim CLI and the mobile benchmark caller
 
 This guide records the explicit model routes, candidate policy, trace format, and loop lock contract. jev-sim never starts a model service and never substitutes a different backend when a selected route fails.
@@ -56,3 +56,5 @@ The identity is the non-empty, trimmed `AGENT_DEVICE_IDENTITY`, else the selecte
 An existing lock with a live PID blocks the new loop. jev-sim reclaims a lock only when its valid owner PID is dead. Missing, malformed, or mismatched owner records fail closed. A process removes the lock on exit only when its owner record still matches its own PID, device identity, and run ID. This makes independently launched callers serialize on the same physical identity even when they use different transport addresses. Set `AGENT_DEVICE_IDENTITY` to the same physical identity in every caller; the transport `--device` can remain the reachable ADB/sim-use address.
 
 The lock coordinates loop processes; it does not serialize unrelated external tools.
+
+Acquisition and stale recovery use the same short `.lock.guard` directory as mobile-jev. Owner records publish by atomic rename. A guard left by a crash fails closed; verify its recorded PID is dead before cleanup. Both implementations share `AGENT_DEVICE_LOCK_ROOT`. The final offline suite passed 44 tests, including cross-language contention races. Source changes made after the frozen live comparison do not alter its scores.
